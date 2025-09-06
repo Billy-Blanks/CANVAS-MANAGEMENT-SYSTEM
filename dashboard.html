@@ -1,0 +1,1835 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Canvas RentEase - Rent Payment Dashboard</title>
+    <style>
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+      }
+
+      .modal {
+        background: #fff;
+        border-radius: 10px;
+        padding: 20px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .modal-header h2 {
+        font-size: 1.5rem;
+        margin: 0;
+      }
+
+      .close-modal {
+        background: transparent;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #888;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: space-between;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1);
+        }
+      }
+      :root {
+        --primary: #4361ee;
+        --primary-light: #4cc9f0;
+        --secondary: #7209b7;
+        --success: #2ec4b6;
+        --danger: #e71d36;
+        --warning: #ff9f1c;
+        --dark: #2b2d42;
+        --light: #f8f9fa;
+        --gray: #adb5bd;
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      }
+
+      body {
+        background-color: #f5f7fa;
+        color: var(--dark);
+      }
+
+      .container {
+        display: flex;
+        min-height: 100vh;
+      }
+
+      /* Sidebar */
+      .sidebar {
+        width: 250px;
+        background-color: var(--dark);
+        color: white;
+        padding: 1.5rem 0;
+        position: fixed;
+        height: 100vh;
+        overflow-y: auto;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        padding: 0 1.5rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 1.5rem;
+      }
+
+      .logo-icon {
+        font-size: 1.8rem;
+        margin-right: 0.5rem;
+        color: var(--primary-light);
+      }
+
+      .logo h2 {
+        font-weight: 600;
+        font-size: 1.25rem;
+      }
+
+      .nav-menu {
+        list-style: none;
+      }
+
+      .nav-item {
+        margin-bottom: 0.25rem;
+      }
+
+      .nav-link {
+        display: flex;
+        align-items: center;
+        padding: 0.75rem 1.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-decoration: none;
+        transition: all 0.3s;
+      }
+
+      .nav-link:hover,
+      .nav-link.active {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        border-left: 4px solid var(--primary-light);
+      }
+
+      .nav-link i {
+        margin-right: 0.75rem;
+        font-size: 1.1rem;
+      }
+
+      /* Main Content */
+      .main-content {
+        flex: 1;
+        padding: 2rem;
+        margin-left: 250px;
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+      }
+
+      .header-title h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+      }
+
+      .header-title p {
+        color: var(--gray);
+        margin-top: 0.25rem;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 1rem;
+      }
+
+      .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 0.25rem;
+        border: none;
+        cursor: pointer;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s;
+      }
+
+      .btn-primary {
+        background-color: var(--primary);
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #3050d0;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border: 1px solid var(--gray);
+      }
+
+      .btn-outline:hover {
+        background-color: rgba(0, 0, 0, 0.05);
+      }
+
+      /* Dashboard Stats */
+      .stats-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .stat-card .icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+        font-size: 1.5rem;
+      }
+
+      .stat-card.primary .icon {
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+      }
+
+      .stat-card.success .icon {
+        background-color: rgba(46, 196, 182, 0.1);
+        color: var(--success);
+      }
+
+      .stat-card.warning .icon {
+        background-color: rgba(255, 159, 28, 0.1);
+        color: var(--warning);
+      }
+
+      .stat-card.danger .icon {
+        background-color: rgba(231, 29, 54, 0.1);
+        color: var(--danger);
+      }
+
+      .stat-card h3 {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+      }
+
+      .stat-card p {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+
+      /* Content Section */
+      .content-section {
+        margin-bottom: 2rem;
+      }
+
+      .content-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .content-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .payment-tabs {
+        display: flex;
+        border-bottom: 1px solid var(--gray);
+        margin-bottom: 1.5rem;
+      }
+
+      .payment-tab {
+        padding: 0.75rem 1.5rem;
+        cursor: pointer;
+        position: relative;
+        color: var(--gray);
+        font-weight: 500;
+      }
+
+      .payment-tab.active {
+        color: var(--primary);
+      }
+
+      .payment-tab.active::after {
+        content: "";
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        width: 100%;
+        height: 2px;
+        background-color: var(--primary);
+      }
+
+      /* Tables */
+      .table-container {
+        background-color: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        overflow: hidden;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: var(--dark);
+      }
+
+      td {
+        padding: 1rem;
+        border-top: 1px solid #e9ecef;
+      }
+
+      tr:hover {
+        background-color: rgba(0, 0, 0, 0.01);
+      }
+
+      .status {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.8rem;
+        font-weight: 500;
+      }
+
+      .status-paid {
+        background-color: rgba(46, 196, 182, 0.1);
+        color: var(--success);
+      }
+
+      .status-pending {
+        background-color: rgba(255, 159, 28, 0.1);
+        color: var(--warning);
+      }
+
+      .status-overdue {
+        background-color: rgba(231, 29, 54, 0.1);
+        color: var(--danger);
+      }
+
+      .action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        color: var(--primary);
+        margin-right: 0.5rem;
+      }
+
+      /* Modals */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+
+      .modal-overlay.active {
+        opacity: 1;
+        visibility: visible;
+      }
+
+      .modal {
+        background-color: white;
+        border-radius: 0.5rem;
+        max-width: 500px;
+        width: 100%;
+        padding: 2rem;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        transform: translateY(-20px);
+        transition: all 0.3s;
+      }
+
+      .modal-overlay.active .modal {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+      }
+
+      .modal-header h2 {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      .close-modal {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: var(--gray);
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--gray);
+        border-radius: 0.25rem;
+        font-size: 1rem;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+      }
+
+      .modal-body {
+        margin-bottom: 1rem;
+      }
+
+      .mb-4 {
+        margin-bottom: 1.5rem;
+      }
+
+      .mt-4 {
+        margin-top: 1.5rem;
+      }
+
+      .w-100 {
+        width: 100%;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+      }
+
+      .mb-3 {
+        margin-bottom: 1rem;
+      }
+
+      /* Reminder setting section */
+      .card {
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1.5rem;
+      }
+
+      .reminder-option {
+        display: flex;
+        align-items: center;
+        padding: 1rem 0;
+        border-bottom: 1px solid #e9ecef;
+      }
+
+      .reminder-option:last-child {
+        border-bottom: none;
+      }
+
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        margin-right: 1rem;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: 0.4s;
+        border-radius: 34px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 16px;
+        width: 16px;
+        left: 4px;
+        bottom: 4px;
+        background-color: white;
+        transition: 0.4s;
+        border-radius: 50%;
+      }
+
+      input:checked + .slider {
+        background-color: var(--primary);
+      }
+
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+      .reminder-text {
+        flex: 1;
+      }
+
+      .reminder-text h4 {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+      }
+
+      .reminder-text p {
+        color: var(--gray);
+        font-size: 0.9rem;
+      }
+
+      /* Reports section */
+      .report-card {
+        display: flex;
+        background-color: white;
+        border-radius: 0.5rem;
+        padding: 1.5rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 1rem;
+        align-items: center;
+        transition: transform 0.3s;
+        cursor: pointer;
+      }
+
+      .report-card:hover {
+        transform: translateY(-5px);
+      }
+
+      .report-icon {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 1rem;
+        font-size: 1.5rem;
+        background-color: rgba(67, 97, 238, 0.1);
+        color: var(--primary);
+      }
+
+      .report-info {
+        flex: 1;
+      }
+
+      /* Responsiveness */
+      @media (max-width: 992px) {
+        .sidebar {
+          width: 80px;
+          overflow: visible;
+        }
+
+        .logo span,
+        .nav-link span {
+          display: none;
+        }
+
+        .logo-icon {
+          margin-right: 0;
+        }
+
+        .logo {
+          justify-content: center;
+          padding: 1.5rem 0;
+        }
+
+        .nav-link {
+          justify-content: center;
+          padding: 0.75rem;
+        }
+
+        .nav-link i {
+          margin-right: 0;
+          font-size: 1.25rem;
+        }
+
+        .main-content {
+          margin-left: 80px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .stats-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .main-content {
+          padding: 1.5rem;
+        }
+
+        .header-actions {
+          flex-direction: column;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .payment-tabs {
+          flex-direction: column;
+        }
+
+        .payment-tab {
+          width: 100%;
+          text-align: center;
+        }
+      }
+    </style>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAFfy2fUSkzm8aAzVWRIetwSYFN8EpstXtdDXrX6BplsfRiSmjjMrh_aiYWOpU5M7SBZwc3JSkRbwqp74&components=hosted-buttons&disable-funding=venmo&currency=USD"></script>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Sidebar Navigation -->
+      <aside class="sidebar">
+        <div class="logo">
+          <div class="logo-icon"><i class="fas fa-home"></i></div>
+          <span><h2>Canvas</h2></span>
+        </div>
+        <ul class="nav-menu">
+          <li class="nav-item">
+            <a href="#dashboard" class="nav-link active" id="dashboardLink">
+              <i class="fas fa-tachometer-alt"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#payments" class="nav-link" id="paymentsLink">
+              <i class="fas fa-credit-card"></i>
+              <span>Payments</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#reminders" class="nav-link" id="remindersLink">
+              <i class="fas fa-bell"></i>
+              <span>Reminders</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#reports" class="nav-link" id="reportsLink">
+              <i class="fas fa-chart-bar"></i>
+              <span>Reports</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#settings" class="nav-link" id="settingsLink">
+              <i class="fas fa-cog"></i>
+              <span>Settings</span>
+            </a>
+          </li>
+        </ul>
+      </aside>
+
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="section active">
+          <header>
+            <div class="header-title">
+              <h1>Dashboard</h1>
+              <p>Welcome back! Here's an overview of your rent payments</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-primary" id="makePaymentBtn">
+                <i class="fas fa-plus"></i> Make Payment
+              </button>
+              <button class="btn btn-outline" id="downloadReportBtn">
+                <i class="fas fa-download"></i> Download Report
+              </button>
+            </div>
+          </header>
+
+          <!-- Stats Cards -->
+          <div class="stats-cards">
+            <div class="stat-card primary">
+              <div class="icon">
+                <i class="fas fa-dollar-sign"></i>
+              </div>
+              <h3>Ksh 4000.00</h3>
+              <p>Current Rent</p>
+            </div>
+            <div class="stat-card success">
+              <div class="icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <h3>Ksh 24000.00</h3>
+              <p>Paid (Last 6 Months)</p>
+            </div>
+            <div class="stat-card warning">
+              <div class="icon">
+                <i class="fas fa-calendar"></i>
+              </div>
+              <h3>5 Days</h3>
+              <p>Until Next Payment</p>
+            </div>
+            <div class="stat-card danger">
+              <div class="icon">
+                <i class="fas fa-exclamation-circle"></i>
+              </div>
+              <h3>$0</h3>
+              <p>Overdue Amount</p>
+            </div>
+          </div>
+
+          <!-- Recent Payments -->
+          <div class="content-section">
+            <div class="content-header">
+              <h2>Recent Payment History</h2>
+              <button class="btn btn-outline">View All</button>
+            </div>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Payment ID</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Method</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="recentPaymentsTable">
+                  <!-- Data will be loaded from JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Payments Section -->
+        <section id="payments" class="section">
+          <header>
+            <div class="header-title">
+              <h1>Payments</h1>
+              <p>Manage and track all your rent payments</p>
+            </div>
+            <div class="header-actions">
+              <button class="btn btn-primary" id="makePaymentBtn2">
+                <i class="fas fa-plus"></i> Make Payment
+              </button>
+            </div>
+          </header>
+
+          <div class="payment-tabs">
+            <div class="payment-tab active" data-tab="all">All Payments</div>
+            <div class="payment-tab" data-tab="paid">Paid</div>
+            <div class="payment-tab" data-tab="pending">Pending</div>
+            <div class="payment-tab" data-tab="overdue">Overdue</div>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Payment ID</th>
+                  <th>Due Date</th>
+                  <th>Payment Date</th>
+                  <th>Amount</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="paymentsTable">
+                <!-- Data will be loaded from JavaScript -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- Reminders Section -->
+        <section id="reminders" class="section">
+          <header>
+            <div class="header-title">
+              <h1>Reminders</h1>
+              <p>Setup automated payment reminders</p>
+            </div>
+          </header>
+
+          <div class="card">
+            <div class="reminder-option">
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+              <div class="reminder-text">
+                <h4>7 Days Before Due Date</h4>
+                <p>Receive an email reminder 7 days before rent is due</p>
+              </div>
+            </div>
+            <div class="reminder-option">
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+              <div class="reminder-text">
+                <h4>3 Days Before Due Date</h4>
+                <p>Receive an email reminder 3 days before rent is due</p>
+              </div>
+            </div>
+            <div class="reminder-option">
+              <label class="switch">
+                <input type="checkbox" checked />
+                <span class="slider"></span>
+              </label>
+              <div class="reminder-text">
+                <h4>1 Day Before Due Date</h4>
+                <p>Receive an email reminder 1 day before rent is due</p>
+              </div>
+            </div>
+            <div class="reminder-option">
+              <label class="switch">
+                <input type="checkbox" />
+                <span class="slider"></span>
+              </label>
+              <div class="reminder-text">
+                <h4>SMS Notifications</h4>
+                <p>Receive SMS reminders for upcoming payments</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3>Custom Reminder</h3>
+            <p class="mb-4">Set a custom reminder for special payments</p>
+            <div class="form-group">
+              <label for="reminderTitle">Title</label>
+              <input
+                type="text"
+                class="form-control"
+                id="reminderTitle"
+                placeholder="e.g. Security Deposit"
+              />
+            </div>
+            <div class="form-group">
+              <label for="reminderDate">Date</label>
+              <input type="date" class="form-control" id="reminderDate" />
+            </div>
+            <div class="form-group">
+              <label for="reminderMessage">Message</label>
+              <textarea
+                class="form-control"
+                id="reminderMessage"
+                rows="3"
+                placeholder="Custom reminder message"
+              ></textarea>
+            </div>
+            <button class="btn btn-primary">Add Reminder</button>
+          </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="section">
+          <header>
+            <div class="header-title">
+              <h1>Reports</h1>
+              <p>Generate and download payment reports</p>
+            </div>
+          </header>
+
+          <div class="report-card" id="monthlyReport">
+            <div class="report-icon">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <div class="report-info">
+              <h3>Monthly Payment Report</h3>
+              <p>Summary of all payments made in the current month</p>
+            </div>
+            <button class="btn btn-outline">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="report-card" id="yearlyReport">
+            <div class="report-icon">
+              <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="report-info">
+              <h3>Annual Payment Summary</h3>
+              <p>Complete report of all transactions in the current year</p>
+            </div>
+            <button class="btn btn-outline">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="report-card" id="receiptReport">
+            <div class="report-icon">
+              <i class="fas fa-receipt"></i>
+            </div>
+            <div class="report-info">
+              <h3>Payment Receipts</h3>
+              <p>Download individual receipts for all completed payments</p>
+            </div>
+            <button class="btn btn-outline">
+              <i class="fas fa-download"></i>
+            </button>
+          </div>
+
+          <div class="card">
+            <h3>Custom Report</h3>
+            <p>Generate a customized report for a specific time period</p>
+            <div class="form-group">
+              <label for="reportStartDate">Start Date</label>
+              <input type="date" class="form-control" id="reportStartDate" />
+            </div>
+            <div class="form-group">
+              <label for="reportEndDate">End Date</label>
+              <input type="date" class="form-control" id="reportEndDate" />
+            </div>
+            <div class="form-group">
+              <label for="reportType">Report Type</label>
+              <select class="form-control" id="reportType">
+                <option value="summary">Payment Summary</option>
+                <option value="detailed">Detailed Transactions</option>
+                <option value="receipt">Payment Receipts</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" id="generateCustomReportBtn">
+              Generate Report
+            </button>
+          </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings" class="section">
+          <header>
+            <div class="header-title">
+              <h1>Settings</h1>
+              <p>Manage your account and payment preferences</p>
+            </div>
+          </header>
+
+          <div class="card">
+            <h3>Security Settings</h3>
+            <div class="form-group">
+              <label for="currentPassword">Current Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="currentPassword"
+              />
+            </div>
+            <div class="form-group">
+              <label for="newPassword">New Password</label>
+              <input type="password" class="form-control" id="newPassword" />
+            </div>
+            <div class="form-group">
+              <label for="confirmPassword">Confirm New Password</label>
+              <input
+                type="password"
+                class="form-control"
+                id="confirmPassword"
+              />
+            </div>
+            <button class="btn btn-primary">Update Password</button>
+          </div>
+
+          <div class="card">
+            <h3>Payment Methods</h3>
+            <div class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Method</th>
+                    <th>Details</th>
+                    <th>Default</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="paymentMethodsTable">
+                  <!-- Data will be loaded from JavaScript -->
+                </tbody>
+              </table>
+            </div>
+            <button class="btn btn-primary mt-4" id="addPaymentMethodBtn">
+              <i class="fas fa-plus"></i> Add Payment Method
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- Payment Method Modal -->
+    <div class="modal-overlay" id="paymentMethodModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Add Payment Method</h2>
+          <button class="close-modal" id="closePaymentMethodModal">
+            &times;
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="methodType">Method Type</label>
+            <select class="form-control" id="methodType">
+              <option value="MPESA">MPESA</option>
+              <option value="credit">Credit Card</option>
+              <option value="debit">Debit Card</option>
+              <option value="bank">Bank Transfer</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cardName">Name on Card/Account</label>
+            <input type="text" class="form-control" id="cardName" />
+          </div>
+          <div class="form-group">
+            <label for="cardNumber">Number</label>
+            <input type="text" class="form-control" id="cardNumber" />
+          </div>
+          <div class="form-group">
+            <label
+              ><input type="checkbox" id="defaultPayment" /> Set as
+              default</label
+            >
+          </div>
+          <div class="form-actions">
+            <button class="btn btn-outline" id="cancelPaymentMethod">
+              Cancel
+            </button>
+            <button class="btn btn-primary" id="savePaymentMethod">Save</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div class="modal-overlay" id="paymentModal">
+      <div class="modal">
+        <div class="modal-header">
+          <h2>Lipa na M-PESA</h2>
+          <button class="close-modal" id="closePaymentModal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group mb-3">
+            <label for="phonenumber" class="form-label">Phone Number</label>
+            <input
+              type="number"
+              class="form-control"
+              id="phonenumber"
+              placeholder="Enter phone number"
+            />
+          </div>
+
+          <div class="form-group mb-3">
+            <label for="paymentAmount" class="form-label">Amount</label>
+            <input
+              type="number"
+              class="form-control"
+              id="paymentAmount"
+              placeholder="Enter amount"
+            />
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-outline" id="cancelPayment">Cancel</button>
+            <button class="btn btn-primary" id="confirmPayment">Confirm</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Include jsPDF from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+      const today = new Date();
+      today.setDate(today.getDate());
+      const minDate = today.toISOString().split("T")[0];
+      document.getElementById("reminderDate").setAttribute("min", minDate);
+      document.getElementById("reportStartDate").setAttribute("min", minDate);
+      document.getElementById("reportEndDate").setAttribute("min", minDate);
+      let payments = [
+        {
+          name: "james njoroge",
+          id: "PAY-1001",
+          dueDate: "2025-04-28",
+          paymentDate: "2025-04-28",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+        {
+          name: "charles ngugi",
+          id: "PAY-1002",
+          dueDate: "2025-03-29",
+          paymentDate: "2025-03-29",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+        {
+          name: "Billy kibet",
+          id: "PAY-1003",
+          dueDate: "2025-03-02",
+          paymentDate: "2025-03-02",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+        {
+          name: "mercy grace",
+          id: "PAY-1004",
+          dueDate: "2025-01-25",
+          paymentDate: "2025-01-25",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+        {
+          name: "jack silvester",
+          id: "PAY-1005",
+          dueDate: "2025-12-30",
+          paymentDate: "2025-12-30",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+        {
+          name: "grace otieno",
+          id: "PAY-1006",
+          dueDate: "2025-06-01",
+          paymentDate: "2025-06-01",
+          amount: 4000,
+          status: "paid",
+          method: "MPESA",
+        },
+      ];
+
+      fetch("http://localhost:3000/payments")
+        .then(async (response) => {
+          let newPayments = await response.json();
+          console.log(newPayments);
+          newPayments = newPayments.map((p) => {
+            return {
+              ...p,
+              name: p.name,
+              id: p.paymentId,
+              status: p.status.toLowerCase(),
+              amount: parseFloat(p.amount),
+              dueDate: p.date ? new Date(p.date).toLocaleDateString() : null,
+              paymentDate: p.date
+                ? new Date(p.date).toLocaleDateString()
+                : null,
+            };
+          });
+          payments = [...payments, ...newPayments];
+          console.log(payments);
+          loadAllPayments();
+          loadRecentPayments();
+          loadPaymentMethods();
+        })
+        .catch((error) => console.error("Error fetching payment data:", error));
+      // Sample Data
+
+      const paymentMethods = [
+        {
+          type: "MPESA",
+          details: "Visa ending in 1234",
+          default: true,
+        },
+        {
+          type: "MPESA",
+          details: "Checking **** 5678",
+          default: false,
+        },
+        {
+          type: "MPESA",
+          details: "user@example.com",
+          default: false,
+        },
+      ];
+
+      // DOM Elements
+      const sections = document.querySelectorAll(".section");
+      const navLinks = document.querySelectorAll(".nav-link");
+      const paymentTabs = document.querySelectorAll(".payment-tab");
+      const makePaymentBtns = document.querySelectorAll(
+        "#makePaymentBtn, #makePaymentBtn2"
+      );
+      const addPaymentMethodBtn = document.getElementById(
+        "addPaymentMethodBtn"
+      );
+      const paymentModal = document.getElementById("paymentModal");
+      const paymentMethodModal = document.getElementById("paymentMethodModal");
+      const closePaymentModal = document.getElementById("closePaymentModal");
+      const closePaymentMethodModal = document.getElementById(
+        "closePaymentMethodModal"
+      );
+      const cancelPayment = document.getElementById("cancelPayment");
+      const confirmPayment = document.getElementById("confirmPayment");
+      const cancelPaymentMethod = document.getElementById(
+        "cancelPaymentMethod"
+      );
+      const savePaymentMethod = document.getElementById("savePaymentMethod");
+      const recentPaymentsTable = document.getElementById(
+        "recentPaymentsTable"
+      );
+      const paymentsTable = document.getElementById("paymentsTable");
+      const paymentMethodsTable = document.getElementById(
+        "paymentMethodsTable"
+      );
+      const successAlert = document.getElementById("successAlert");
+
+      // Initial page load
+      document.addEventListener("DOMContentLoaded", () => {
+        // Set current date for payment date input
+        const paymentDateInput = document.getElementById("paymentDate");
+        if (paymentDateInput) {
+          paymentDateInput.value = new Date().toISOString().split("T")[0];
+        }
+
+        // Load tables
+        loadRecentPayments();
+        loadAllPayments();
+        loadPaymentMethods();
+
+        // Hide all sections except dashboard
+        sections.forEach((section) => {
+          if (section.id !== "dashboard") {
+            section.style.display = "none";
+          }
+        });
+      });
+
+      // Navigation
+      navLinks.forEach((link) => {
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+
+          // Update active link
+          navLinks.forEach((navLink) => navLink.classList.remove("active"));
+          link.classList.add("active");
+
+          // Show corresponding section
+          const targetId = link.getAttribute("href").substring(1);
+          sections.forEach((section) => {
+            section.style.display = section.id === targetId ? "block" : "none";
+          });
+        });
+      });
+
+      // Payment Tabs
+      paymentTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+          // Update active tab
+          paymentTabs.forEach((t) => t.classList.remove("active"));
+          tab.classList.add("active");
+
+          // Filter payments by status
+          const status = tab.getAttribute("data-tab");
+          loadAllPayments(status);
+        });
+      });
+
+      // Modal Controls
+      makePaymentBtns.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          paymentModal.classList.add("active");
+        });
+      });
+
+      addPaymentMethodBtn.addEventListener("click", () => {
+        paymentMethodModal.classList.add("active");
+      });
+
+      closePaymentModal.addEventListener("click", () => {
+        paymentModal.classList.remove("active");
+      });
+
+      if (closePaymentMethodModal) {
+        closePaymentMethodModal.addEventListener("click", () => {
+          paymentMethodModal.classList.remove("active");
+        });
+      }
+
+      if (cancelPayment) {
+        cancelPayment.addEventListener("click", () => {
+          paymentModal.classList.remove("active");
+        });
+      }
+
+      if (cancelPaymentMethod) {
+        cancelPaymentMethod.addEventListener("click", () => {
+          paymentMethodModal.classList.remove("active");
+        });
+      }
+
+      if (confirmPayment) {
+        // Form Submissions
+        confirmPayment.addEventListener("click", async () => {
+          const amount = document.getElementById("paymentAmount").value;
+          const phoneNumber = document.getElementById("phonenumber").value;
+          const date = Date.now();
+          const method = "MPESA";
+
+          // Simple validation
+          if (!amount || !date || !method) {
+            alert("Please fill in all required fields", "error");
+            return;
+          }
+
+          // In a real application, you would send this data to a server
+          // For demo purposes, we'll just show a success message
+          paymentModal.classList.remove("active");
+          alert("Payment successful! Your receipt has been emailed.");
+          const urlParams = new URLSearchParams(window.location.search);
+          const name = urlParams.get("name");
+          // Add new payment to the list and refresh tables
+          const newPayment = {
+            name: name,
+            id: `PAY-${1007 + payments.length}`,
+            dueDate: date,
+            paymentDate: date,
+            amount: parseFloat(amount),
+            status: "paid",
+            phone: phoneNumber,
+            method: getMethodName(method),
+          };
+
+          const res = await fetch("http://localhost:3000/pay", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(newPayment),
+          });
+
+          console.log("Payment response:", res);
+
+          payments.unshift(newPayment);
+          loadRecentPayments();
+          loadAllPayments();
+        });
+      }
+
+      if (savePaymentMethod) {
+        savePaymentMethod.addEventListener("click", () => {
+          const type = document.getElementById("methodType").value;
+          const name = document.getElementById("cardName").value;
+          const number = document.getElementById("cardNumber").value;
+
+          // Simple validation
+          if (!type || !name || !number) {
+            showAlert("Please fill in all required fields", "error");
+            return;
+          }
+
+          // In a real application, you would send this data to a server
+          // For demo purposes, we'll just show a success message
+          paymentMethodModal.classList.remove("active");
+          showAlert("Payment method added successfully!", "success");
+
+          // Add new payment method to the list and refresh table
+          const newMethod = {
+            type: getMethodName(type),
+            details: `${
+              type === "credit" || type === "debit" ? "Card" : "Account"
+            } ending in ${number.slice(-4)}`,
+            default: document.getElementById("defaultPayment").checked,
+          };
+
+          if (newMethod.default) {
+            paymentMethods.forEach((method) => (method.default = false));
+          }
+
+          paymentMethods.push(newMethod);
+          loadPaymentMethods();
+        });
+      }
+
+      // Helper Functions
+      function loadRecentPayments() {
+        recentPaymentsTable.innerHTML = "";
+        const recentPayments = payments
+          .filter((payment) => payment.status !== "pending")
+          .slice(0, 5);
+
+        recentPayments.forEach((payment) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                          <td>${payment.name}</td>
+                          <td>${payment.id}</td>
+                          <td>${formatDate(payment.paymentDate)}</td>
+                          <td>${payment.amount.toFixed(2)}</td>
+                          <td><span class="status status-${
+                            payment.status
+                          }">${capitalizeFirstLetter(
+            payment.status
+          )}</span></td>
+                          <td>${payment.method || "N/A"}</td>
+                          <td>
+                              <button class="action-btn" title="View Receipt"><i class="fas fa-file-alt"></i></button>
+                              <button class="action-btn" title="Download Receipt"><i class="fas fa-download"></i></button>
+                          </td>
+                      `;
+          recentPaymentsTable.appendChild(row);
+        });
+      }
+
+      function loadAllPayments(filter = "all") {
+        console.log("Loading all payments with filter:", filter);
+        paymentsTable.innerHTML = "";
+        let filteredPayments = payments;
+        console.log("Payments before filtering:", payments);
+        if (filter !== "all") {
+          filteredPayments = payments.filter(
+            (payment) => payment.status === filter
+          );
+        }
+        console.log("Filtered payments:", filteredPayments);
+
+        filteredPayments.forEach((payment) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                          <td>${payment.name}</td>
+                          <td>${payment.id}</td>
+                          <td>${formatDate(payment.dueDate)}</td>
+                          <td>${
+                            payment.paymentDate
+                              ? formatDate(payment.paymentDate)
+                              : "Not Paid"
+                          }</td>
+                          <td>${payment.amount.toFixed(2)}</td>
+                          <td><span class="status status-${
+                            payment.status
+                          }">${capitalizeFirstLetter(
+            payment.status
+          )}</span></td>
+                          <td>${payment.method || "N/A"}</td>
+                          <td>
+                              ${
+                                payment.status === "pending"
+                                  ? `<button class="action-btn" title="Pay Now"><i class="fas fa-credit-card"></i></button>`
+                                  : `<button class="action-btn" title="View Receipt"><i class="fas fa-file-alt"></i></button>`
+                              }
+                              <button class="action-btn" title="Download Receipt"><i class="fas fa-download"></i></button>
+                          </td>
+                      `;
+          paymentsTable.appendChild(row);
+        });
+
+        // Add event listeners to "Pay Now" buttons
+        document.querySelectorAll('button[title="Pay Now"]').forEach((btn) => {
+          btn.addEventListener("click", () => {
+            paymentModal.classList.add("active");
+          });
+        });
+      }
+
+      function loadPaymentMethods() {
+        paymentMethodsTable.innerHTML = "";
+
+        paymentMethods.forEach((method, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+                          <td>${method.type}</td>
+                          <td>${method.details}</td>
+                          <td>${
+                            method.default
+                              ? '<i class="fas fa-check-circle" style="color: var(--success);"></i>'
+                              : ""
+                          }</td>
+                          <td>
+                              <button class="action-btn" title="Edit Method"><i class="fas fa-edit"></i></button>
+                              <button class="action-btn" title="Delete Method" data-index="${index}"><i class="fas fa-trash"></i></button>
+                              ${
+                                !method.default
+                                  ? `<button class="action-btn" title="Set as Default" data-index="${index}"><i class="fas fa-star"></i></button>`
+                                  : ""
+                              }
+                          </td>
+                      `;
+          paymentMethodsTable.appendChild(row);
+        });
+
+        // Add event listeners to "Set as Default" buttons
+        document
+          .querySelectorAll('button[title="Set as Default"]')
+          .forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const index = btn.getAttribute("data-index");
+              paymentMethods.forEach((method) => (method.default = false));
+              paymentMethods[index].default = true;
+              loadPaymentMethods();
+              showAlert("Default payment method updated!", "success");
+            });
+          });
+
+        // Add event listeners to "Delete Method" buttons
+        document
+          .querySelectorAll('button[title="Delete Method"]')
+          .forEach((btn) => {
+            btn.addEventListener("click", () => {
+              const index = btn.getAttribute("data-index");
+              // Don't allow deleting the default method
+              if (paymentMethods[index].default) {
+                showAlert("Cannot delete default payment method", "error");
+                return;
+              }
+              paymentMethods.splice(index, 1);
+              loadPaymentMethods();
+              showAlert("Payment method deleted!", "success");
+            });
+          });
+      }
+
+      function formatDate(dateStr) {
+        if (!dateStr) return "N/A";
+        const date = new Date(dateStr);
+        return date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      }
+
+      function capitalizeFirstLetter(string) {
+        return string.charAt(0).toUpperCase() + string.slice(1);
+      }
+
+      function getMethodName(method) {
+        const methods = {
+          credit: "Credit Card",
+          debit: "Debit Card",
+          bank: "Bank Transfer",
+          paypal: "PayPal",
+          MPESA: "MPESA",
+        };
+        return methods[method] || method;
+      }
+
+      function showAlert(message, type = "info") {
+        alert(message);
+      }
+
+      // Secure System Features
+      // In a real application, these functions would communicate with a backend server
+      function encryptData(data) {
+        // This is a placeholder - actual encryption would happen on a secure server
+        console.log("Data securely encrypted");
+        return data;
+      }
+
+      function verifyPayment(paymentData) {
+        // This is a placeholder - actual verification would happen on a secure server
+        console.log("Payment verified");
+        return true;
+      }
+
+      function generateSecureToken() {
+        // This is a placeholder - actual token generation would happen on a secure server
+        return "sec_" + Math.random().toString(36).substr(2, 9);
+      }
+
+      // Initialize dashboard with secure session
+      const secureToken = generateSecureToken();
+      console.log("Secure session initialized with token:", secureToken);
+
+      // Download Report Button Handler
+      document
+        .getElementById("downloadReportBtn")
+        .addEventListener("click", async () => {
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          const reportContent = [
+            ["Name", "Payment ID", "Date", "Amount", "Status", "Method"],
+            [
+              "james njorgoge",
+              "PAY-1001",
+              "2025-04-28",
+              "4000",
+              "paid",
+              "MPESA",
+            ],
+            [
+              "charles ngugi",
+              "PAY-1002",
+              "2025-03-29",
+              "4000",
+              "paid",
+              "MPESA",
+            ],
+          ];
+
+          // Add title
+          doc.setFontSize(16);
+          doc.text("Rent Payment Report", 14, 20);
+
+          // Add table-like content
+          let startY = 30;
+          reportContent.forEach((row, index) => {
+            doc.text(row.join("    "), 14, startY + index * 10);
+          });
+
+          // Save the PDF
+          doc.save("rent_report.pdf");
+        });
+
+      // Handle custom report generation
+      document
+        .getElementById("generateCustomReportBtn")
+        .addEventListener("click", async () => {
+          const startDate = document.getElementById("reportStartDate").value;
+          const endDate = document.getElementById("reportEndDate").value;
+          const reportType = document.getElementById("reportType").value;
+
+          if (!startDate || !endDate) {
+            alert("Please select both start and end dates.");
+            return;
+          }
+
+          const content = `Report Type: ${reportType}\nStart Date: ${startDate}\nEnd Date: ${endDate}\n\nSample Data:\nID,Date,Amount,Status\nPAY-1001,2025-04-28,8000,paid`;
+
+          // Load jsPDF from the global namespace
+          const { jsPDF } = window.jspdf;
+          const doc = new jsPDF();
+
+          // Add text content
+          const lines = doc.splitTextToSize(content, 180); // wrap long lines
+          doc.text(lines, 10, 10);
+
+          // Save the PDF
+          doc.save(
+            `custom_report_${reportType}_${startDate}_to_${endDate}.pdf`
+          );
+        });
+
+      // Enable the three static download buttons in report cards
+      const { jsPDF } = window.jspdf;
+      let receipts = [
+        {
+          name: "james njoroge",
+          id: "PAY-1001",
+          amount: "4000",
+          method: "M-PESA",
+        },
+        {
+          name: "charles ngugi",
+          id: "PAY-1002",
+          amount: "4000",
+          method: "M-PESA",
+        },
+        {
+          name: "Billy kibet",
+          id: "PAY-1003",
+          amount: "4000",
+          method: "M-PESA",
+        },
+        {
+          name: "mercy grace",
+          id: "PAY-1004",
+          amount: "4000",
+          method: "M-PESA",
+        },
+      ];
+      document
+        .querySelectorAll("#reports .report-card .btn")
+        .forEach((button, index) => {
+          button.addEventListener("click", () => {
+            fetch("http://localhost:3000/payments")
+              .then(async (response) => {
+                let newPayments = await response.json();
+                console.log(newPayments);
+                newPayments = newPayments.map((p) => {
+                  return {
+                    ...p,
+                    name: p.name,
+                    id: p.paymentId,
+                    status: p.status.toLowerCase(),
+                    amount: parseFloat(p.amount),
+                    dueDate: p.date
+                      ? new Date(p.date).toLocaleDateString()
+                      : null,
+                    paymentDate: p.date
+                      ? new Date(p.date).toLocaleDateString()
+                      : null,
+                  };
+                });
+                newPayments.forEach((p) => {
+                  const pid = receipts.findIndex((r) => r.id === p.id);
+                  if (pid === -1) {
+                    // Add new receipt
+                    receipts.push({
+                      name: p.name,
+                      id: p.id,
+                      amount: p.amount,
+                      method: p.method,
+                    });
+                  }
+                });
+                const reports = [
+                  {
+                    name: "monthly_report.pdf",
+                    content: "Month,Amount\nJune,4000\nMay,4000",
+                  },
+                  {
+                    name: "annual_report.pdf",
+                    content: "Year,Amount\n2025,48000",
+                  },
+                  {
+                    name: "receipts.pdf",
+                    content: receipts
+                      .map((receipt) => {
+                        return `- ${receipt.name} | ${receipt.id} | Amount: KES ${receipt.amount} | Method: ${receipt.method}`;
+                      })
+                      .join("\n"),
+                  },
+                ];
+                const report = reports[index];
+                const doc = new jsPDF();
+
+                doc.setFontSize(14);
+                doc.text("Report", 14, 20);
+
+                // Split multiline content for proper line spacing
+                const lines = report.content.split("\n");
+                lines.forEach((line, i) => {
+                  doc.text(line, 14, 30 + i * 10);
+                });
+
+                doc.save(report.name);
+              })
+              .catch((error) => {
+                console.error("Error generating report:", error);
+              });
+          });
+        });
+
+      // Handle adding custom reminders
+      const addReminderButton = document.querySelector(
+        "#reminders .card button.btn.btn-primary"
+      );
+      addReminderButton.addEventListener("click", () => {
+        const title = document.getElementById("reminderTitle").value.trim();
+        const date = document.getElementById("reminderDate").value;
+        const message = document.getElementById("reminderMessage").value.trim();
+
+        if (!title || !date || !message) {
+          alert("Please fill in all fields for the reminder.");
+          return;
+        }
+
+        const reminderHTML = `
+          <div class="reminder-option">
+            <label class="switch">
+              <input type="checkbox" checked />
+              <span class="slider"></span>
+            </label>
+            <div class="reminder-text">
+              <h4>${title}</h4>
+              <p>${message} — <strong>${date}</strong></p>
+            </div>
+          </div>
+        `;
+
+        const cardElements = document.querySelectorAll("#reminders .card");
+        if (cardElements.length > 0) {
+          // Append new reminder to the first card
+          cardElements[0].insertAdjacentHTML("beforeend", reminderHTML);
+
+          // Clear the form
+          document.getElementById("reminderTitle").value = "";
+          document.getElementById("reminderDate").value = "";
+          document.getElementById("reminderMessage").value = "";
+
+          alert("Reminder added successfully!");
+        }
+      });
+    </script>
+  </body>
+</html>

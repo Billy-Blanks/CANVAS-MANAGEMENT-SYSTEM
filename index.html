@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas House - Apartment Rent Management</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container header-content">
+            <a href="#" class="logo">Canvas<span>House</span></a>
+            <nav>
+                <ul>
+                    <li><a href="#">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#apartments">Apartments</a></li>
+                    <li><a href="#login">Login</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>Modern Apartment Rent Management System</h1>
+            <p>Canvas House Apartment - A reasonable-priced-apartment in Githurai 44, Nairobi with 160 rooms within eight floors.</p>
+            <a href="#login" class="btn">Get Started</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Features</h2>
+                <p>Discover the benefits of our modern rent management system designed for both tenants and property owners.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <h3>Easy Rent Payment</h3>
+                    <p>Support for various payment methods, including bank transfers and M-Pesa for convenient and secure transactions.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Payment Tracking</h3>
+                    <p>Track your rent payments and history, with access to transaction records and payment receipts at any time.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Automated Reminders</h3>
+                    <p>Receive timely notifications about upcoming rent payments and never miss a deadline.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Secure System</h3>
+                    <p>Robust security measures to protect sensitive financial information and reduce risks.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Reports Generation</h3>
+                    <p>Generate reports on total rent paid and arrears for both the property owner and tenants.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Apartments Section -->
+    <section class="apartments" id="apartments">
+        <div class="container">
+            <div class="section-title">
+                <h2>Our Apartments</h2>
+                <p>Canvas House Apartment offers comfortable and affordable living spaces for students and professionals.</p>
+            </div>
+            <div class="features-grid">
+                <div class="apartment-card">
+                    <div class="apartment-image" style="background-image: url('images/building-exterior-1.jpg');"></div>
+                    <div class="apartment-info">
+                        <div class="apartment-price">Ksh 4,000/month</div>
+                        <h3>Standard Room</h3>
+                        <p>Comfortable single room with essential amenities, perfect for students.</p>
+                        <div class="apartment-features">
+                            <div class="apartment-feature">Floor: Various</div>
+                        </div>
+                        <a href="#" class="btn">View Details</a>
+                    </div>
+                </div>
+                <div class="apartment-card">
+                    <div class="apartment-image" style="background-image: url('images/building-exterior-2.jpg');"></div>
+                    <div class="apartment-info">
+                        <div class="apartment-price">Ksh 4,000/month</div>
+                        <h3>Corner Room</h3>
+                        <p>Spacious corner room with extra natural light and ventilation.</p>
+                        <div class="apartment-features">
+                            <div class="apartment-feature">Floor: Various</div>
+                        </div>
+                        <a href="#" class="btn">View Details</a>
+                    </div>
+                </div>
+                <div class="apartment-card">
+                    <div class="apartment-image" style="background-image: url('images/building-exterior-1.jpg');"></div>
+                    <div class="apartment-info">
+                        <div class="apartment-price">Ksh 4,000/month</div>
+                        <h3>Upper Floor Room</h3>
+                        <p>Room with a view, located on the upper floors of the building.</p>
+                        <div class="apartment-features">
+                            <div class="apartment-feature">Floor: 5-8</div>
+                        </div>
+                        <a href="#" class="btn">View Details</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-title">
+                <h2>What Our Tenants Say</h2>
+                <p>Hear from the people who have experienced our modern rent management system.</p>
+            </div>
+            <div class="features-grid">
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The rent payment system makes it so easy to keep track of my payments. I love getting automatic reminders and being able to access my payment history anytime."</p>
+                    <p class="testimonial-author">- John M., Student</p>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"As a busy student, I appreciate the convenience of paying rent through M-Pesa. The digital invoices are great for my record keeping."</p>
+                    <p class="testimonial-author">- Sarah K., Student</p>
+                </div>
+                <div class="testimonial-card">
+                    <p class="testimonial-text">"The system is user-friendly and secure. I never have to worry about lost receipts or payment disputes anymore."</p>
+                    <p class="testimonial-author">- Michael O., Professional</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Login Section -->
+    <section class="login-section" id="login">
+        <div class="container">
+            <div class="section-title">
+                <h2>Account Access</h2>
+                <p>Log in to manage your rent payments, view invoices, and access your transaction history.</p>
+            </div>
+            <div class="login-container">
+                <form class="login-form">
+                    <div class="form-group">
+                        <label for="user-type">I am a:</label>
+                        <select id="user-type">
+                            <option value="tenant">Tenant</option>
+                            <option value="landlord">Property Owner/Manager</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" placeholder="Enter your password" required>
+                    </div>
+                    <button type="submit" class="btn" style="width: 100%;">Login</button>
+                    <p style="text-align: center; margin-top: 1rem;">Don't have an account? <a href="register.html">Register</a></p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>canvas House</h3>
+                    <p>A reasonable-priced apartment in Githurai 44, Nairobi with 160 rooms within eight floors.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Home</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="#apartments">Apartments</a></li>
+                        <li><a href="#login">Login</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Us</h3>
+                    <ul class="footer-links">
+                        <li>Githurai 44, Nairobi</li>
+                        <li>Phone: +254 795 688 657</li>
+                        <li>Email: info@Canvashouse.co.ke</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2025 Canvas House Apartments. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/main.js"></script>
+</body>
+</html>
