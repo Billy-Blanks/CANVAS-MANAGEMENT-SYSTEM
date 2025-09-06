@@ -1192,7 +1192,17 @@
       fetch("http://localhost:3000/payments")
         .then(async (response) => {
           let newPayments = await response.json();
-          console.log(newPayments);
+          const urlParams = new URLSearchParams(window.location.search);
+          const name = urlParams.get("name");
+
+          if (!name) {
+            newPayments = [];
+          } else {
+            newPayments = newPayments.filter(
+              (p) => p.name.toLowerCase() === name.toLowerCase()
+            );
+          }
+
           newPayments = newPayments.map((p) => {
             return {
               ...p,
@@ -1206,8 +1216,14 @@
                 : null,
             };
           });
-          payments = [...payments, ...newPayments];
-          console.log(payments);
+          if (!name) {
+            payments = [];
+          } else {
+            payments = payments.filter(
+              (p) => p.name.toLowerCase() === name.toLowerCase()
+            );
+            payments = [...payments, ...newPayments];
+          }
           loadAllPayments();
           loadRecentPayments();
           loadPaymentMethods();
@@ -1724,7 +1740,15 @@
             fetch("http://localhost:3000/payments")
               .then(async (response) => {
                 let newPayments = await response.json();
-                console.log(newPayments);
+                const urlParams = new URLSearchParams(window.location.search);
+                const name = urlParams.get("name");
+                if (!name) {
+                  newPayments = [];
+                } else {
+                  newPayments = newPayments.filter(
+                    (p) => p.name.toLowerCase() === name.toLowerCase()
+                  );
+                }
                 newPayments = newPayments.map((p) => {
                   return {
                     ...p,

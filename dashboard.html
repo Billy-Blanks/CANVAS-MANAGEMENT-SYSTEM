@@ -722,9 +722,6 @@
               <p>Welcome back! Here's an overview of your rent payments</p>
             </div>
             <div class="header-actions">
-              <button class="btn btn-primary" id="makePaymentBtn">
-                <i class="fas fa-plus"></i> Make Payment
-              </button>
               <button class="btn btn-outline" id="downloadReportBtn">
                 <i class="fas fa-download"></i> Download Report
               </button>
@@ -796,11 +793,6 @@
             <div class="header-title">
               <h1>Payments</h1>
               <p>Manage and track all your rent payments</p>
-            </div>
-            <div class="header-actions">
-              <button class="btn btn-primary" id="makePaymentBtn2">
-                <i class="fas fa-plus"></i> Make Payment
-              </button>
             </div>
           </header>
 
@@ -1237,9 +1229,6 @@
       const sections = document.querySelectorAll(".section");
       const navLinks = document.querySelectorAll(".nav-link");
       const paymentTabs = document.querySelectorAll(".payment-tab");
-      const makePaymentBtns = document.querySelectorAll(
-        "#makePaymentBtn, #makePaymentBtn2"
-      );
       const addPaymentMethodBtn = document.getElementById(
         "addPaymentMethodBtn"
       );
@@ -1312,13 +1301,6 @@
           // Filter payments by status
           const status = tab.getAttribute("data-tab");
           loadAllPayments(status);
-        });
-      });
-
-      // Modal Controls
-      makePaymentBtns.forEach((btn) => {
-        btn.addEventListener("click", () => {
-          paymentModal.classList.add("active");
         });
       });
 

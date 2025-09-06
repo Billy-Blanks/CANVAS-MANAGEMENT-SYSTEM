@@ -40,10 +40,15 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("Login successful! Redirecting to dashboard...");
           setTimeout(() => {
             const name = `${data.firstName} ${data.lastName}`;
-      // Encode the name for safe URL usage
-      const encodedName = encodeURIComponent(name);
-      // Redirect with query parameter
-       window.location.href = "dashboard.html?name=" + encodedName;
+            // Encode the name for safe URL usage
+            const encodedName = encodeURIComponent(name);
+            if (userType === "tenant") {
+              // Redirect with query parameter
+              window.location.href = "tenant.html?name=" + encodedName;
+            } else {
+              // Redirect with query parameter
+              window.location.href = "dashboard.html?name=" + encodedName;
+            }
           }, 2000); // 2 seconds delay for demonstration
         })
         .catch((error) => {
