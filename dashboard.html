@@ -730,33 +730,33 @@
 
           <!-- Stats Cards -->
           <div class="stats-cards">
-            <div class="stat-card primary">
-              <div class="icon">
-                <i class="fas fa-dollar-sign"></i>
-              </div>
-              <h3>Ksh 4000.00</h3>
-              <p>Current Rent</p>
-            </div>
             <div class="stat-card success">
               <div class="icon">
                 <i class="fas fa-check-circle"></i>
               </div>
-              <h3>Ksh 24000.00</h3>
-              <p>Paid (Last 6 Months)</p>
-            </div>
-            <div class="stat-card warning">
-              <div class="icon">
-                <i class="fas fa-calendar"></i>
-              </div>
-              <h3>5 Days</h3>
-              <p>Until Next Payment</p>
+              <h3 id="totalPaidAmount">Ksh 0.00</h3>
+              <p>Total Paid Amount</p>
             </div>
             <div class="stat-card danger">
               <div class="icon">
                 <i class="fas fa-exclamation-circle"></i>
               </div>
-              <h3>$0</h3>
+              <h3 id="overdueAmount">Ksh 0.00</h3>
               <p>Overdue Amount</p>
+            </div>
+            <div class="stat-card primary">
+              <div class="icon">
+                <i class="fas fa-calendar-alt"></i>
+              </div>
+              <h3 id="monthlyTotal">Ksh 0.00</h3>
+              <p>This Month's Total</p>
+            </div>
+            <div class="stat-card warning">
+              <div class="icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <h3 id="yearlyTotal">Ksh 0.00</h3>
+              <p>This Year's Total</p>
             </div>
           </div>
 
@@ -953,29 +953,7 @@
             </button>
           </div>
 
-          <div class="card">
-            <h3>Custom Report</h3>
-            <p>Generate a customized report for a specific time period</p>
-            <div class="form-group">
-              <label for="reportStartDate">Start Date</label>
-              <input type="date" class="form-control" id="reportStartDate" />
-            </div>
-            <div class="form-group">
-              <label for="reportEndDate">End Date</label>
-              <input type="date" class="form-control" id="reportEndDate" />
-            </div>
-            <div class="form-group">
-              <label for="reportType">Report Type</label>
-              <select class="form-control" id="reportType">
-                <option value="summary">Payment Summary</option>
-                <option value="detailed">Detailed Transactions</option>
-                <option value="receipt">Payment Receipts</option>
-              </select>
-            </div>
-            <button class="btn btn-primary" id="generateCustomReportBtn">
-              Generate Report
-            </button>
-          </div>
+          
         </section>
 
         <!-- Settings Section -->
@@ -1012,73 +990,10 @@
             <button class="btn btn-primary">Update Password</button>
           </div>
 
-          <div class="card">
-            <h3>Payment Methods</h3>
-            <div class="table-container">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Method</th>
-                    <th>Details</th>
-                    <th>Default</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="paymentMethodsTable">
-                  <!-- Data will be loaded from JavaScript -->
-                </tbody>
-              </table>
-            </div>
-            <button class="btn btn-primary mt-4" id="addPaymentMethodBtn">
-              <i class="fas fa-plus"></i> Add Payment Method
-            </button>
-          </div>
         </section>
       </main>
     </div>
 
-    <!-- Payment Method Modal -->
-    <div class="modal-overlay" id="paymentMethodModal">
-      <div class="modal">
-        <div class="modal-header">
-          <h2>Add Payment Method</h2>
-          <button class="close-modal" id="closePaymentMethodModal">
-            &times;
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="methodType">Method Type</label>
-            <select class="form-control" id="methodType">
-              <option value="MPESA">MPESA</option>
-              <option value="credit">Credit Card</option>
-              <option value="debit">Debit Card</option>
-              <option value="bank">Bank Transfer</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="cardName">Name on Card/Account</label>
-            <input type="text" class="form-control" id="cardName" />
-          </div>
-          <div class="form-group">
-            <label for="cardNumber">Number</label>
-            <input type="text" class="form-control" id="cardNumber" />
-          </div>
-          <div class="form-group">
-            <label
-              ><input type="checkbox" id="defaultPayment" /> Set as
-              default</label
-            >
-          </div>
-          <div class="form-actions">
-            <button class="btn btn-outline" id="cancelPaymentMethod">
-              Cancel
-            </button>
-            <button class="btn btn-primary" id="savePaymentMethod">Save</button>
-          </div>
-        </div>
-      </div>
-    </div>
 
     <!-- Payment Modal -->
     <div class="modal-overlay" id="paymentModal">
@@ -1122,8 +1037,6 @@
       today.setDate(today.getDate());
       const minDate = today.toISOString().split("T")[0];
       document.getElementById("reminderDate").setAttribute("min", minDate);
-      document.getElementById("reportStartDate").setAttribute("min", minDate);
-      document.getElementById("reportEndDate").setAttribute("min", minDate);
       let payments = [
         {
           name: "james njoroge",
@@ -1181,6 +1094,29 @@
         },
       ];
 
+      // Load locally stored payments (from tenant page) and optional tenant filter
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlTenantName = urlParams.get("name");
+      function dedupeById(arr) {
+        const seen = new Set();
+        return arr.filter((p) => {
+          const key = p && p.id ? String(p.id) : Math.random();
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+      }
+      let localPayments = [];
+      try {
+        localPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+      } catch (_) { localPayments = []; }
+      if (localPayments.length) {
+        payments = dedupeById([...payments, ...localPayments]);
+      }
+      if (urlTenantName) {
+        payments = payments.filter(p => String(p.name).toLowerCase() === urlTenantName.toLowerCase());
+      }
+
       fetch("http://localhost:3000/payments")
         .then(async (response) => {
           let newPayments = await response.json();
@@ -1198,59 +1134,37 @@
                 : null,
             };
           });
-          payments = [...payments, ...newPayments];
+          // Merge: existing (possibly filtered), server, and any local payments, then dedupe
+          let merged = dedupeById([...(payments || []), ...newPayments, ...localPayments]);
+          // Re-apply tenant filter if present
+          payments = urlTenantName ? merged.filter(p => String(p.name).toLowerCase() === urlTenantName.toLowerCase()) : merged;
           console.log(payments);
           loadAllPayments();
           loadRecentPayments();
-          loadPaymentMethods();
+          updateDashboardStats();
         })
-        .catch((error) => console.error("Error fetching payment data:", error));
+        .catch((error) => {
+          console.error("Error fetching payment data:", error);
+          // Ensure UI still updates with local/base data
+          loadAllPayments();
+          loadRecentPayments();
+          updateDashboardStats();
+        });
       // Sample Data
 
-      const paymentMethods = [
-        {
-          type: "MPESA",
-          details: "Visa ending in 1234",
-          default: true,
-        },
-        {
-          type: "MPESA",
-          details: "Checking **** 5678",
-          default: false,
-        },
-        {
-          type: "MPESA",
-          details: "user@example.com",
-          default: false,
-        },
-      ];
 
       // DOM Elements
       const sections = document.querySelectorAll(".section");
       const navLinks = document.querySelectorAll(".nav-link");
       const paymentTabs = document.querySelectorAll(".payment-tab");
-      const addPaymentMethodBtn = document.getElementById(
-        "addPaymentMethodBtn"
-      );
       const paymentModal = document.getElementById("paymentModal");
-      const paymentMethodModal = document.getElementById("paymentMethodModal");
       const closePaymentModal = document.getElementById("closePaymentModal");
-      const closePaymentMethodModal = document.getElementById(
-        "closePaymentMethodModal"
-      );
       const cancelPayment = document.getElementById("cancelPayment");
       const confirmPayment = document.getElementById("confirmPayment");
-      const cancelPaymentMethod = document.getElementById(
-        "cancelPaymentMethod"
-      );
-      const savePaymentMethod = document.getElementById("savePaymentMethod");
       const recentPaymentsTable = document.getElementById(
         "recentPaymentsTable"
       );
       const paymentsTable = document.getElementById("paymentsTable");
-      const paymentMethodsTable = document.getElementById(
-        "paymentMethodsTable"
-      );
       const successAlert = document.getElementById("successAlert");
 
       // Initial page load
@@ -1264,7 +1178,7 @@
         // Load tables
         loadRecentPayments();
         loadAllPayments();
-        loadPaymentMethods();
+        updateDashboardStats();
 
         // Hide all sections except dashboard
         sections.forEach((section) => {
@@ -1304,29 +1218,13 @@
         });
       });
 
-      addPaymentMethodBtn.addEventListener("click", () => {
-        paymentMethodModal.classList.add("active");
-      });
-
       closePaymentModal.addEventListener("click", () => {
         paymentModal.classList.remove("active");
       });
 
-      if (closePaymentMethodModal) {
-        closePaymentMethodModal.addEventListener("click", () => {
-          paymentMethodModal.classList.remove("active");
-        });
-      }
-
       if (cancelPayment) {
         cancelPayment.addEventListener("click", () => {
           paymentModal.classList.remove("active");
-        });
-      }
-
-      if (cancelPaymentMethod) {
-        cancelPaymentMethod.addEventListener("click", () => {
-          paymentMethodModal.classList.remove("active");
         });
       }
 
@@ -1375,43 +1273,10 @@
           payments.unshift(newPayment);
           loadRecentPayments();
           loadAllPayments();
+          updateDashboardStats();
         });
       }
 
-      if (savePaymentMethod) {
-        savePaymentMethod.addEventListener("click", () => {
-          const type = document.getElementById("methodType").value;
-          const name = document.getElementById("cardName").value;
-          const number = document.getElementById("cardNumber").value;
-
-          // Simple validation
-          if (!type || !name || !number) {
-            showAlert("Please fill in all required fields", "error");
-            return;
-          }
-
-          // In a real application, you would send this data to a server
-          // For demo purposes, we'll just show a success message
-          paymentMethodModal.classList.remove("active");
-          showAlert("Payment method added successfully!", "success");
-
-          // Add new payment method to the list and refresh table
-          const newMethod = {
-            type: getMethodName(type),
-            details: `${
-              type === "credit" || type === "debit" ? "Card" : "Account"
-            } ending in ${number.slice(-4)}`,
-            default: document.getElementById("defaultPayment").checked,
-          };
-
-          if (newMethod.default) {
-            paymentMethods.forEach((method) => (method.default = false));
-          }
-
-          paymentMethods.push(newMethod);
-          loadPaymentMethods();
-        });
-      }
 
       // Helper Functions
       function loadRecentPayments() {
@@ -1492,62 +1357,6 @@
         });
       }
 
-      function loadPaymentMethods() {
-        paymentMethodsTable.innerHTML = "";
-
-        paymentMethods.forEach((method, index) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-                          <td>${method.type}</td>
-                          <td>${method.details}</td>
-                          <td>${
-                            method.default
-                              ? '<i class="fas fa-check-circle" style="color: var(--success);"></i>'
-                              : ""
-                          }</td>
-                          <td>
-                              <button class="action-btn" title="Edit Method"><i class="fas fa-edit"></i></button>
-                              <button class="action-btn" title="Delete Method" data-index="${index}"><i class="fas fa-trash"></i></button>
-                              ${
-                                !method.default
-                                  ? `<button class="action-btn" title="Set as Default" data-index="${index}"><i class="fas fa-star"></i></button>`
-                                  : ""
-                              }
-                          </td>
-                      `;
-          paymentMethodsTable.appendChild(row);
-        });
-
-        // Add event listeners to "Set as Default" buttons
-        document
-          .querySelectorAll('button[title="Set as Default"]')
-          .forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const index = btn.getAttribute("data-index");
-              paymentMethods.forEach((method) => (method.default = false));
-              paymentMethods[index].default = true;
-              loadPaymentMethods();
-              showAlert("Default payment method updated!", "success");
-            });
-          });
-
-        // Add event listeners to "Delete Method" buttons
-        document
-          .querySelectorAll('button[title="Delete Method"]')
-          .forEach((btn) => {
-            btn.addEventListener("click", () => {
-              const index = btn.getAttribute("data-index");
-              // Don't allow deleting the default method
-              if (paymentMethods[index].default) {
-                showAlert("Cannot delete default payment method", "error");
-                return;
-              }
-              paymentMethods.splice(index, 1);
-              loadPaymentMethods();
-              showAlert("Payment method deleted!", "success");
-            });
-          });
-      }
 
       function formatDate(dateStr) {
         if (!dateStr) return "N/A";
@@ -1576,6 +1385,50 @@
 
       function showAlert(message, type = "info") {
         alert(message);
+      }
+
+      // Function to update dashboard statistics
+      function updateDashboardStats() {
+        const currentDate = new Date();
+        const currentMonth = currentDate.getMonth();
+        const currentYear = currentDate.getFullYear();
+        
+        // Calculate total paid amount (sum of all paid payments)
+        const totalPaid = payments
+          .filter(payment => payment.status === 'paid')
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        // Calculate overdue amount (sum of overdue payments)
+        const overdueAmount = payments
+          .filter(payment => payment.status === 'overdue')
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        // Calculate monthly total (payments made in current month)
+        const monthlyTotal = payments
+          .filter(payment => {
+            if (!payment.paymentDate) return false;
+            const paymentDate = new Date(payment.paymentDate);
+            return payment.status === 'paid' && 
+                   paymentDate.getMonth() === currentMonth && 
+                   paymentDate.getFullYear() === currentYear;
+          })
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        // Calculate yearly total (payments made in current year)
+        const yearlyTotal = payments
+          .filter(payment => {
+            if (!payment.paymentDate) return false;
+            const paymentDate = new Date(payment.paymentDate);
+            return payment.status === 'paid' && 
+                   paymentDate.getFullYear() === currentYear;
+          })
+          .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        
+        // Update the DOM elements
+        document.getElementById('totalPaidAmount').textContent = `Ksh ${totalPaid.toFixed(2)}`;
+        document.getElementById('overdueAmount').textContent = `Ksh ${overdueAmount.toFixed(2)}`;
+        document.getElementById('monthlyTotal').textContent = `Ksh ${monthlyTotal.toFixed(2)}`;
+        document.getElementById('yearlyTotal').textContent = `Ksh ${yearlyTotal.toFixed(2)}`;
       }
 
       // Secure System Features
@@ -1608,68 +1461,74 @@
           const { jsPDF } = window.jspdf;
           const doc = new jsPDF();
 
-          const reportContent = [
-            ["Name", "Payment ID", "Date", "Amount", "Status", "Method"],
-            [
-              "james njorgoge",
-              "PAY-1001",
-              "2025-04-28",
-              "4000",
-              "paid",
-              "MPESA",
-            ],
-            [
-              "charles ngugi",
-              "PAY-1002",
-              "2025-03-29",
-              "4000",
-              "paid",
-              "MPESA",
-            ],
-          ];
+          // Calculate summary statistics
+          const totalPaid = payments
+            .filter(payment => payment.status === 'paid')
+            .reduce((sum, payment) => sum + (payment.amount || 0), 0);
+          
+          const totalTransactions = payments.length;
+          const paidTransactions = payments.filter(p => p.status === 'paid').length;
+          const pendingTransactions = payments.filter(p => p.status === 'pending').length;
+          const overdueTransactions = payments.filter(p => p.status === 'overdue').length;
 
-          // Add title
+          // Add title and summary
           doc.setFontSize(16);
-          doc.text("Rent Payment Report", 14, 20);
+          doc.text("Complete Payment Transactions Report", 14, 20);
+          
+          doc.setFontSize(12);
+          doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 35);
+          doc.text(`Total Transactions: ${totalTransactions}`, 14, 45);
+          doc.text(`Paid Transactions: ${paidTransactions}`, 14, 55);
+          doc.text(`Pending Transactions: ${pendingTransactions}`, 14, 65);
+          doc.text(`Overdue Transactions: ${overdueTransactions}`, 14, 75);
+          doc.text(`Total Amount Paid: KES ${totalPaid.toFixed(2)}`, 14, 85);
 
-          // Add table-like content
-          let startY = 30;
-          reportContent.forEach((row, index) => {
-            doc.text(row.join("    "), 14, startY + index * 10);
+          // Add table header
+          doc.setFontSize(10);
+          let startY = 100;
+          doc.text("Name", 14, startY);
+          doc.text("Payment ID", 50, startY);
+          doc.text("Date", 90, startY);
+          doc.text("Amount", 130, startY);
+          doc.text("Status", 160, startY);
+          doc.text("Method", 190, startY);
+
+          // Add separator line
+          startY += 5;
+          doc.line(14, startY, 200, startY);
+
+          // Add payment data
+          startY += 10;
+          payments.forEach((payment, index) => {
+            if (startY > 280) {
+              doc.addPage();
+              startY = 20;
+              // Add header again on new page
+              doc.setFontSize(10);
+              doc.text("Name", 14, startY);
+              doc.text("Payment ID", 50, startY);
+              doc.text("Date", 90, startY);
+              doc.text("Amount", 130, startY);
+              doc.text("Status", 160, startY);
+              doc.text("Method", 190, startY);
+              startY += 15;
+            }
+
+            doc.text(payment.name || "N/A", 14, startY);
+            doc.text(payment.id || "N/A", 50, startY);
+            doc.text(formatDate(payment.paymentDate) || "N/A", 90, startY);
+            doc.text(`KES ${(payment.amount || 0).toFixed(2)}`, 130, startY);
+            doc.text(capitalizeFirstLetter(payment.status || "N/A"), 160, startY);
+            doc.text(payment.method || "N/A", 190, startY);
+            
+            startY += 8;
           });
 
           // Save the PDF
-          doc.save("rent_report.pdf");
+          doc.save("complete_payment_transactions_report.pdf");
         });
 
-      // Handle custom report generation
-      document
-        .getElementById("generateCustomReportBtn")
-        .addEventListener("click", async () => {
-          const startDate = document.getElementById("reportStartDate").value;
-          const endDate = document.getElementById("reportEndDate").value;
-          const reportType = document.getElementById("reportType").value;
-
-          if (!startDate || !endDate) {
-            alert("Please select both start and end dates.");
-            return;
-          }
-
-          const content = `Report Type: ${reportType}\nStart Date: ${startDate}\nEnd Date: ${endDate}\n\nSample Data:\nID,Date,Amount,Status\nPAY-1001,2025-04-28,8000,paid`;
-
-          // Load jsPDF from the global namespace
-          const { jsPDF } = window.jspdf;
-          const doc = new jsPDF();
-
-          // Add text content
-          const lines = doc.splitTextToSize(content, 180); // wrap long lines
-          doc.text(lines, 10, 10);
-
-          // Save the PDF
-          doc.save(
-            `custom_report_${reportType}_${startDate}_to_${endDate}.pdf`
-          );
-        });
+      // (Custom report removed)
 
       // Enable the three static download buttons in report cards
       const { jsPDF } = window.jspdf;
@@ -1699,78 +1558,134 @@
           method: "M-PESA",
         },
       ];
-      document
-        .querySelectorAll("#reports .report-card .btn")
-        .forEach((button, index) => {
-          button.addEventListener("click", () => {
-            fetch("http://localhost:3000/payments")
-              .then(async (response) => {
-                let newPayments = await response.json();
-                console.log(newPayments);
-                newPayments = newPayments.map((p) => {
-                  return {
-                    ...p,
-                    name: p.name,
-                    id: p.paymentId,
-                    status: p.status.toLowerCase(),
-                    amount: parseFloat(p.amount),
-                    dueDate: p.date
-                      ? new Date(p.date).toLocaleDateString()
-                      : null,
-                    paymentDate: p.date
-                      ? new Date(p.date).toLocaleDateString()
-                      : null,
-                  };
-                });
-                newPayments.forEach((p) => {
-                  const pid = receipts.findIndex((r) => r.id === p.id);
-                  if (pid === -1) {
-                    // Add new receipt
-                    receipts.push({
-                      name: p.name,
-                      id: p.id,
-                      amount: p.amount,
-                      method: p.method,
-                    });
-                  }
-                });
-                const reports = [
-                  {
-                    name: "monthly_report.pdf",
-                    content: "Month,Amount\nJune,4000\nMay,4000",
-                  },
-                  {
-                    name: "annual_report.pdf",
-                    content: "Year,Amount\n2025,48000",
-                  },
-                  {
-                    name: "receipts.pdf",
-                    content: receipts
-                      .map((receipt) => {
-                        return `- ${receipt.name} | ${receipt.id} | Amount: KES ${receipt.amount} | Method: ${receipt.method}`;
-                      })
-                      .join("\n"),
-                  },
-                ];
-                const report = reports[index];
-                const doc = new jsPDF();
+      // Wire report buttons to generate from merged in-memory `payments`
+      const monthlyBtn = document.querySelector('#monthlyReport .btn');
+      const yearlyBtn = document.querySelector('#yearlyReport .btn');
+      const receiptsBtn = document.querySelector('#receiptReport .btn');
 
-                doc.setFontSize(14);
-                doc.text("Report", 14, 20);
+      function getMergedPaymentsForReports() {
+        let local = [];
+        try { local = JSON.parse(localStorage.getItem('payments') || '[]'); } catch (_) { local = []; }
+        return dedupeById([...(payments || []), ...local]);
+      }
 
-                // Split multiline content for proper line spacing
-                const lines = report.content.split("\n");
-                lines.forEach((line, i) => {
-                  doc.text(line, 14, 30 + i * 10);
-                });
-
-                doc.save(report.name);
-              })
-              .catch((error) => {
-                console.error("Error generating report:", error);
-              });
-          });
+      function generateMonthlyReport() {
+        const all = getMergedPaymentsForReports();
+        const now = new Date();
+        const m = now.getMonth();
+        const y = now.getFullYear();
+        const monthly = all.filter(p => {
+          const d = p.paymentDate || p.dueDate;
+          if (!d) return false;
+          const dt = new Date(d);
+          return String(p.status).toLowerCase() === 'paid' && dt.getMonth() === m && dt.getFullYear() === y;
         });
+        const total = monthly.reduce((s,p)=> s + (Number(p.amount)||0), 0);
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        doc.setFontSize(14); doc.text(`Monthly Payment Report - ${now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}`, 14, 20);
+        doc.setFontSize(12); let yPos = 32;
+        doc.text(`Total Payments: ${monthly.length}`, 14, yPos); yPos += 8;
+        doc.text(`Total Amount: KES ${total.toFixed(2)}`, 14, yPos); yPos += 12;
+        doc.setFontSize(11);
+        monthly.forEach((p) => { if (yPos > 280) { doc.addPage(); yPos = 20; } doc.text(`- ${p.name} | ${p.id} | KES ${(Number(p.amount)||0).toFixed(2)} | ${p.method||'N/A'} | ${new Date(p.paymentDate||p.dueDate).toLocaleDateString()}`, 14, yPos); yPos += 7; });
+        doc.save('monthly_report.pdf');
+      }
+
+      function generateAnnualReport() {
+        const all = getMergedPaymentsForReports();
+        const now = new Date();
+        const y = now.getFullYear();
+        const yearly = all.filter(p => {
+          const d = p.paymentDate || p.dueDate;
+          if (!d) return false;
+          const dt = new Date(d);
+          return String(p.status).toLowerCase() === 'paid' && dt.getFullYear() === y;
+        });
+        const total = yearly.reduce((s,p)=> s + (Number(p.amount)||0), 0);
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        doc.setFontSize(14); doc.text(`Annual Payment Summary - ${y}`, 14, 20);
+        doc.setFontSize(12); let yPos = 32;
+        doc.text(`Total Transactions: ${yearly.length}`, 14, yPos); yPos += 8;
+        doc.text(`Total Amount: KES ${total.toFixed(2)}`, 14, yPos); yPos += 12;
+        doc.setFontSize(11);
+        yearly.forEach((p) => { if (yPos > 280) { doc.addPage(); yPos = 20; } doc.text(`- ${p.name} | ${p.id} | KES ${(Number(p.amount)||0).toFixed(2)} | ${p.method||'N/A'} | ${new Date(p.paymentDate||p.dueDate).toLocaleDateString()}`, 14, yPos); yPos += 7; });
+        doc.save('annual_report.pdf');
+      }
+
+      function generateReceiptsList() {
+        const all = getMergedPaymentsForReports();
+        const paid = all.filter(p => String(p.status).toLowerCase() === 'paid');
+        const { jsPDF } = window.jspdf; const doc = new jsPDF();
+        doc.setFontSize(14); doc.text('Payment Receipts', 14, 20);
+        doc.setFontSize(11); let yPos = 32;
+        if (paid.length === 0) { doc.text('No receipts available.', 14, yPos); doc.save('receipts.pdf'); return; }
+        paid.forEach((p) => { if (yPos > 280) { doc.addPage(); yPos = 20; } doc.text(`- ${p.name} | ${p.id} | Amount: KES ${(Number(p.amount)||0).toFixed(2)} | Method: ${p.method||'N/A'} | Date: ${new Date(p.paymentDate||p.dueDate).toLocaleDateString()}`, 14, yPos); yPos += 7; });
+        doc.save('receipts.pdf');
+      }
+
+      if (monthlyBtn) monthlyBtn.addEventListener('click', generateMonthlyReport);
+      if (yearlyBtn) yearlyBtn.addEventListener('click', generateAnnualReport);
+      if (receiptsBtn) receiptsBtn.addEventListener('click', generateReceiptsList);
+
+      // Settings: Update Password
+      (function wireUpdatePassword() {
+        const updateBtn = document.querySelector('#settings .card button.btn.btn-primary');
+        if (!updateBtn) return;
+        updateBtn.addEventListener('click', async () => {
+          const currentPasswordEl = document.getElementById('currentPassword');
+          const newPasswordEl = document.getElementById('newPassword');
+          const confirmPasswordEl = document.getElementById('confirmPassword');
+          const currentPassword = (currentPasswordEl?.value || '').trim();
+          const newPassword = (newPasswordEl?.value || '').trim();
+          const confirmPassword = (confirmPasswordEl?.value || '').trim();
+
+          if (!currentPassword || !newPassword || !confirmPassword) {
+            alert('Please fill in all password fields.');
+            return;
+          }
+          if (newPassword !== confirmPassword) {
+            alert('New password and confirmation do not match.');
+            return;
+          }
+          if (newPassword.length < 8) {
+            alert('New password must be at least 8 characters long.');
+            return;
+          }
+
+          try {
+            const res = await fetch('http://localhost:3000/update-password', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'X-Auth-Token': secureToken },
+              body: JSON.stringify({ currentPassword, newPassword })
+            });
+            const contentType = res.headers.get('content-type') || '';
+            if (!res.ok) {
+              let message = 'Failed to update password';
+              if (contentType.includes('application/json')) {
+                const j = await res.json();
+                message = j.error || message;
+              } else {
+                const t = await res.text();
+                message = t || message;
+              }
+              alert(message);
+              return;
+            }
+            if (contentType.includes('application/json')) {
+              await res.json();
+            } else {
+              await res.text();
+            }
+            alert('Password updated successfully.');
+            if (currentPasswordEl) currentPasswordEl.value = '';
+            if (newPasswordEl) newPasswordEl.value = '';
+            if (confirmPasswordEl) confirmPasswordEl.value = '';
+          } catch (err) {
+            console.error('Update password error:', err);
+            alert('An error occurred while updating the password.');
+          }
+        });
+      })();
 
       // Handle adding custom reminders
       const addReminderButton = document.querySelector(

@@ -22,17 +22,29 @@ document.addEventListener("DOMContentLoaded", function () {
         body: formData,
       })
         .then(async (response) => {
+          const contentType = response.headers.get("content-type") || "";
           if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(
-              errorData.error || "Server responded with an error"
-            );
+            try {
+              if (contentType.includes("application/json")) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Server responded with an error");
+              }
+              const text = await response.text();
+              throw new Error(text || "Server responded with an error");
+            } catch (err) {
+              if (err instanceof Error) throw err;
+              throw new Error("Server responded with an error");
+            }
           }
-          return response.json(); // or .text() if server sends plain text
+          if (contentType.includes("application/json")) {
+            return response.json();
+          }
+          const text = await response.text();
+          throw new Error("Unexpected response from server. Expected JSON but received HTML/text.");
         })
         .then((data) => {
           if (data.error) {
-            alert("Error during registration: " + data.error);
+            alert("Login error: " + data.error);
             return;
           }
           console.log("Login successful:", data);
@@ -40,20 +52,19 @@ document.addEventListener("DOMContentLoaded", function () {
           alert("Login successful! Redirecting to dashboard...");
           setTimeout(() => {
             const name = `${data.firstName} ${data.lastName}`;
-            // Encode the name for safe URL usage
             const encodedName = encodeURIComponent(name);
             if (userType === "tenant") {
-              // Redirect with query parameter
+              // Tenants see their own payments only
               window.location.href = "tenant.html?name=" + encodedName;
             } else {
-              // Redirect with query parameter
-              window.location.href = "dashboard.html?name=" + encodedName;
+              // Managers/staff see all payments; no name filter in URL
+              window.location.href = "dashboard.html";
             }
           }, 2000); // 2 seconds delay for demonstration
         })
         .catch((error) => {
-          console.error("Registration error:", error);
-          alert("Error during registration: " + error.message);
+          console.error("Login error:", error);
+          alert("Login error: " + error.message);
         });
       // In a real application, you would authenticate and redirect to the appropriate dashboard
     });

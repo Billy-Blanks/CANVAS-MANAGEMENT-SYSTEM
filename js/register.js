@@ -82,6 +82,19 @@ document.addEventListener('DOMContentLoaded', function () {
             valid = false;
         }
 
+        // Tenant-specific validation: room number required for tenants to satisfy backend
+        const selectedUserType = userTypeSelect.value;
+        const roomNumberInput = document.getElementById('room-number');
+        const roomNumberRaw = roomNumberInput ? roomNumberInput.value.trim() : '';
+        if (selectedUserType === 'tenant' && !roomNumberRaw) {
+            // No dedicated error element exists; provide a quick inline feedback and block submit
+            roomNumberInput.style.borderColor = 'var(--accent-color)';
+            alert('Please enter your room number (required for tenants).');
+            valid = false;
+        } else if (roomNumberInput) {
+            roomNumberInput.style.borderColor = '';
+        }
+
         // If form is valid, submit it
         if (valid) {
             // Create a FormData object for multipart/form-data submission
@@ -94,7 +107,9 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('email', email);
             formData.append('phone', phone);
             formData.append('password', password);
-            formData.append('roomNumber', document.getElementById('room-number').value);
+            // Backend requires roomNumber; send the actual value for tenants, send 'N/A' for non-tenants
+            const roomNumberValue = selectedUserType === 'tenant' ? roomNumberRaw : 'N/A';
+            formData.append('roomNumber', roomNumberValue);
             formData.append('position', document.getElementById('position').value);
 
             // Log the form data (for debugging)
@@ -106,26 +121,58 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: formData
             })
                 .then(async response => {
+                    const contentType = response.headers.get("content-type") || "";
                     if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || 'Server responded with an error');
+                        try {
+                            if (contentType.includes("application/json")) {
+                                const errorData = await response.json();
+                                throw new Error(errorData.error || 'Server responded with an error');
+                            }
+                            const text = await response.text();
+                            throw new Error(text || 'Server responded with an error');
+                        } catch (err) {
+                            if (err instanceof Error) throw err;
+                            throw new Error('Server responded with an error');
+                        }
                     }
-                    return response.json(); // or .text() if server sends plain text
+                    if (contentType.includes("application/json")) {
+                        return response.json();
+                    }
+                    // If server returned HTML/text for success, treat as generic success
+                    await response.text();
+                    return { message: 'Registration successful' };
                 })
                 .then(data => {
                     if (data.error) {
                         alert('Error during registration: ' + data.error);
                         return
                     }
-                    console.log('Registration successful:', data.message);
+                    console.log('Registration successful:', data.message || 'Success');
 
                     successMessage.style.display = 'block';
+                    successMessage.innerHTML = 'Registration successful! Redirecting to login...';
                     registrationForm.reset();
                     successMessage.scrollIntoView({ behavior: 'smooth' });
+
+                    // Redirect to login on index page after short delay
+                    setTimeout(() => {
+                        window.location.href = 'index.html#login';
+                    }, 1500);
                 })
                 .catch(error => {
                     console.error('Registration error:', error);
-                    alert('Error during registration: ' + error.message);
+                    // Attempt to extract readable message from potential HTML error page
+                    let message = error.message || 'Registration failed';
+                    try {
+                        const match = message.match(/<pre>([\s\S]*?)<\\\/pre>/i);
+                        if (match && match[1]) {
+                            message = match[1]
+                                .replace(/<br\s*\/?\s*>/gi, '\n')
+                                .replace(/&nbsp;/gi, ' ')
+                                .trim();
+                        }
+                    } catch (_) {}
+                    alert('Error during registration: ' + message);
                 });
 
         } else {
