@@ -406,10 +406,12 @@
         const overdueEl = document.getElementById("overdueAmountValue");
 
         const now = new Date();
+        console.log(payments)
 
         // Total paid overall (sums paid payments currently in the payments array)
         const totalPaid = payments.filter((p) => String(p.status).toLowerCase() === "paid").reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
         totalPaidEl.textContent = `Ksh ${totalPaid.toFixed(2)}`;
+        console.log(totalPaid,"billy paid")
 
         // Paid this month
         const year = now.getFullYear();
@@ -637,8 +639,17 @@
             return;
           }
           
-          if (phoneNumber.length < 10) {
-            alert("Please enter a valid phone number.");
+          // Normalize Kenyan MSISDN to 2547XXXXXXXX
+          function normalizeMsisdn(msisdn) {
+            const cleaned = String(msisdn).replace(/\s|\+/g, "");
+            if (/^0\d{9}$/.test(cleaned)) return "254" + cleaned.slice(1);
+            if (/^254\d{9}$/.test(cleaned)) return cleaned;
+            if (/^7\d{8}$/.test(cleaned)) return "254" + cleaned;
+            return cleaned; // fallback; server should re-validate
+          }
+          const msisdn = normalizeMsisdn(phoneNumber);
+          if (!/^2547\d{8}$/.test(msisdn)) {
+            alert("Please enter a valid Safaricom number (e.g. 07XXXXXXXX or 2547XXXXXXXX).");
             return;
           }
           
@@ -646,58 +657,52 @@
             alert("Please enter a valid amount greater than 0.");
             return;
           }
+          // Disable button while processing
+          const previousText = confirmPayment.textContent;
+          confirmPayment.disabled = true;
+          confirmPayment.textContent = "Processing...";
 
-          // Generate payment ID
-          const paymentId = "PAY-" + (Date.now().toString().slice(-6));
-          
-          // Get current date
-          const currentDate = new Date().toISOString();
-          
-          // Get tenant name from URL or use default
+          // Get tenant name for account reference
           const urlParams = new URLSearchParams(window.location.search);
-          const tenantName = urlParams.get("name") || "Unknown Tenant";
-          
-          // Create new payment object
-          const newPayment = {
-            name: tenantName,
-            id: paymentId,
-            dueDate: currentDate,
-            paymentDate: currentDate,
-            amount: parseFloat(amount),
-            status: "paid",
-            method: "MPESA"
-          };
-          
-          // Add to payments array
-          payments.unshift(newPayment);
-          
-          // Persist to localStorage so Dashboard can reflect it
-          try {
-            const stored = JSON.parse(localStorage.getItem('payments') || '[]');
-            stored.unshift(newPayment);
-            localStorage.setItem('payments', JSON.stringify(stored));
-          } catch (e) {
-            console.error('Failed to persist payment to localStorage', e);
-          }
-          
-          // Update UI
-          updateStats();
-          loadRecentPayments();
-          loadAllPayments();
-          generateCalendar();
-          
-          // Generate and download receipt
-          generatePaymentReceipt(newPayment);
-          
-          // Clear form
-          document.getElementById("phonenumber").value = "";
-          document.getElementById("paymentAmount").value = "";
-          
-          // Close modal
-          paymentModal.classList.remove("active");
-          
-          // Show success message
-          alert(`Payment of Ksh ${amount} processed successfully! Receipt has been downloaded.`);
+          const tenantName = urlParams.get("name") || "Tenant";
+
+          // Call backend to initiate STK Push
+          fetch("http://localhost:3000/pay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              name: tenantName,
+              phone: msisdn,
+              amount: Number(amount),
+              accountReference: tenantName,
+              description: "Rent Payment"
+            })
+          })
+          .then(async (res) => {
+            if (!res.ok) {
+              const errText = await res.text().catch(() => "");
+              throw new Error(errText || `Request failed (${res.status})`);
+            }
+            return res.json().catch(() => ({ success: true }));
+          })
+          .then((data) => {
+            alert("STK Push sent. Check your phone to complete the payment.");
+            // Optionally close modal here
+            paymentModal.classList.remove("active");
+          })
+          .catch((err) => {
+            console.error("STK push error:", err);
+            alert("Failed to initiate STK push. Please try again.");
+          })
+          .finally(() => {
+            // Restore button state
+            confirmPayment.disabled = false;
+            confirmPayment.textContent = previousText;
+            // Clear fields
+            document.getElementById("phonenumber").value = "";
+            document.getElementById("paymentAmount").value = "";
+            window.location.reload()
+          });
         });
       }
 
